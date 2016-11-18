@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<!-- JQuery import -->
+<script src="jquery-1.11.2.min.js"></script>
+</head>
+
+<body>
+
+	<!-- Upload file form -->
+	<form id="upload-file-form">
+		<label for="upload-file-input">Upload your file:</label> <input
+			id="upload-file-input" type="file" name="file" accept="*.war" />
+		<br /> <span id="upload-file-message"></span>
+	</form>
+	<br />
+	<div id="uploaded_files">
+	</div>
+	<!-- Javascript functions -->
+	<script>
+  
+    //bind the on-change event for the input element (triggered when a file
+    // is chosen)
+    $(document).ready(function() {
+      $("#upload-file-input").on("change", uploadFile);
+    });
+
+    $.ajax({
+        url: "/repo/files/test?page=0&page_size=10",
+        type: "GET",
+        enctype: 'application/x-www-form-urlencoded',
+        processData: true,
+        contentType: "application/json",
+        cache: false,
+        success: function (resp, textStatus, jqXHR) {
+          // Handle upload success
+          var text = '';
+          for (var i = 0; i < resp.data.length; ++i) {
+          	text += resp.data[i].url + ", ";
+          }
+          $("#uploaded_files").text(text);
+        },
+        error: function (errmsg) {
+          // Handle upload error
+          err = JSON.parse(errmsg.responseText);
+          $("#upload-file-message").text("错误：" + err.message);
+        }
+      });
+    /**
+     * Upload the file sending it via Ajax at the Spring Boot server.
+     */
+    function uploadFile() {
+      $("#upload-file-message").text("Uploading...");
+      $.ajax({
+        url: "/repo/files/test?override=true",
+        type: "POST",
+        data: new FormData($("#upload-file-form")[0]),
+        enctype: 'multipart/form-data',
+        processData: false,
+        contentType: false,
+        cache: false,
+        success: function (resp, textStatus, jqXHR) {
+          // Handle upload success
+          $("#upload-file-message").text("File succesfully uploaded, download URL: " + jqXHR.getResponseHeader("Location"));
+        },
+        error: function (errmsg) {
+        	console.log(errmsg)
+          // Handle upload error
+          err = JSON.parse(errmsg.responseText);
+          $("#upload-file-message").text("错误：" + err.message);
+        }
+      });
+    } // function uploadFile
+</script>
+
+</body>
+
+</html>
